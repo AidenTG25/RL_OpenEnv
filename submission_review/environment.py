@@ -1,6 +1,9 @@
 from models import Action, Observation, State
 from tasks import TASKS
 
+MIN_TASK_SCORE = 0.01
+MAX_TASK_SCORE = 0.99
+
 
 INSTRUCTIONS = (
     "You are a senior software engineer reviewing a pull request. "
@@ -61,7 +64,7 @@ class PRReviewEnvironment:
 
     def _grade(self, action: Action, task: dict) -> float:
         if action.false_positive and not task.get("allowed_false_positive", False):
-            return 0.0
+            return MIN_TASK_SCORE
 
         issues = task["issues"]
         matched_issue_ids = self._match_issues(action.bugs_found, issues)
@@ -85,7 +88,7 @@ class PRReviewEnvironment:
         if matched_issue_ids and len(matched_issue_ids) == len(issues):
             score += 0.10
 
-        return round(max(0.0, min(score, 1.0)), 4)
+        return round(max(MIN_TASK_SCORE, min(score, MAX_TASK_SCORE)), 4)
 
     def _match_issues(self, bug_reports: list[str], issues: list[dict]) -> set[str]:
         matched_issue_ids: set[str] = set()

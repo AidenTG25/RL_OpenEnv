@@ -9,6 +9,8 @@ API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1"
 MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
 ENV_URL = os.environ.get("ENV_URL", "http://localhost:8000")
+TASK_NAME = os.environ.get("TASK_NAME", "pr-review-curriculum")
+BENCHMARK = os.environ.get("BENCHMARK", "pr-review-env")
 
 client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
@@ -66,10 +68,12 @@ def call_llm(obs: dict) -> dict:
 
 
 def run_inference():
-    total_reward = 0.0
-    results = []
+    rewards = []
+    step_num = 0
+    success = False
+    score = 0.0
 
-    print("[START]")
+    print(f"[START] task={TASK_NAME} env={BENCHMARK} model={MODEL_NAME}")
 
     reset_resp = requests.post(f"{ENV_URL}/reset")
     reset_resp.raise_for_status()
@@ -77,17 +81,17 @@ def run_inference():
 
     session_id = obs.pop("session_id")
     headers = {"X-Session-Id": session_id}
-    step_num = 0
 
     while True:
         difficulty = obs.get("task_difficulty", "")
         if difficulty == "done":
             break
 
+        error = None
         try:
             action = call_llm(obs)
         except Exception as exc:
-            print(f"[STEP] step={step_num} difficulty={difficulty} reward=0.0 error={exc}")
+            error = str(exc)
             action = {
                 "bugs_found": ["Could not parse LLM response"],
                 "severity": "low",
@@ -102,42 +106,33 @@ def run_inference():
         reward = result.get("reward", 0.0)
         done = result.get("done", False)
         obs = result.get("observation", {})
-
-        total_reward += reward
-        results.append(
-            {
-                "difficulty": difficulty,
-                "reward": reward,
-                "bugs_found": action.get("bugs_found", []),
-                "severity": action.get("severity", ""),
-                "suggested_fix": action.get("suggested_fix", ""),
-            }
-        )
-
+        rewards.append(reward)
+        step_num += 1
+        action_str = json.dumps(action, separators=(",", ":"), ensure_ascii=True)
         print(
             f"[STEP] step={step_num} "
-            f"difficulty={difficulty} "
-            f"reward={reward} "
-            f"severity={action.get('severity')} "
-            f"bugs_found={len(action.get('bugs_found', []))}"
+            f"action={action_str} "
+            f"reward={reward:.2f} "
+            f"done={str(done).lower()} "
+            f"error={error if error else 'null'}"
         )
 
-        step_num += 1
         if done:
             break
 
-    avg_reward = round(total_reward / max(len(results), 1), 4)
-    print(f"[END] total_reward={round(total_reward, 4)} avg_reward={avg_reward} steps={len(results)}")
+    if rewards:
+        score = sum(rewards) / len(rewards)
+        success = score > 0.0
 
-    print("\nDetailed Results")
-    for result in results:
-        print(f"  {result['difficulty']:8s} | reward={result['reward']} | severity={result['severity']}")
-        for bug in result["bugs_found"]:
-            print(f"             bug: {bug}")
-        print(f"             fix: {result['suggested_fix'][:80]}...")
-        print()
+    rewards_str = ",".join(f"{reward:.2f}" for reward in rewards)
+    print(
+        f"[END] success={str(success).lower()} "
+        f"steps={step_num} "
+        f"score={score:.3f} "
+        f"rewards={rewards_str}"
+    )
 
-    return avg_reward
+    return score
 
 
 if __name__ == "__main__":
