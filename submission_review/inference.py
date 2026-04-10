@@ -11,6 +11,7 @@ HF_TOKEN = os.environ.get("HF_TOKEN", "")
 ENV_URL = os.environ.get("ENV_URL", "http://localhost:8000")
 TASK_NAME = os.environ.get("TASK_NAME", "pr-review-curriculum")
 BENCHMARK = os.environ.get("BENCHMARK", "pr-review-env")
+TOTAL_TASKS = int(os.environ.get("TOTAL_TASKS", "4"))
 
 client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
@@ -88,18 +89,12 @@ def run_inference():
 
     print(f"[START] task={TASK_NAME} env={BENCHMARK} model={MODEL_NAME}")
 
-    reset_resp = requests.post(f"{ENV_URL}/reset")
-    reset_resp.raise_for_status()
-    obs = reset_resp.json()
-
-    session_id = obs.pop("session_id")
-    headers = {"X-Session-Id": session_id}
-
-    while True:
-        difficulty = obs.get("task_difficulty", "")
-        if difficulty == "done":
-            break
-
+    for task_index in range(TOTAL_TASKS):
+        reset_resp = requests.post(f"{ENV_URL}/reset", json={"task_index": task_index})
+        reset_resp.raise_for_status()
+        obs = reset_resp.json()
+        session_id = obs.pop("session_id")
+        headers = {"X-Session-Id": session_id}
         error = None
         try:
             action = call_llm(obs)
@@ -130,8 +125,8 @@ def run_inference():
             f"error={error if error else 'null'}"
         )
 
-        if done:
-            break
+        if not done:
+            error = "task episode did not terminate after one review step"
 
     if rewards:
         score = sum(rewards) / len(rewards)

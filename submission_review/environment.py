@@ -16,36 +16,32 @@ INSTRUCTIONS = (
 
 
 class PRReviewEnvironment:
-    def __init__(self):
-        self.state = State()
+    def __init__(self, task_index: int = 0):
+        self.task_index = task_index % len(TASKS)
+        self.state = State(current_task=self.task_index)
 
     def reset(self) -> Observation:
-        self.state = State(task_rewards=[])
-        task = TASKS[0]
+        self.state = State(current_task=self.task_index, task_rewards=[])
+        task = TASKS[self.task_index]
         return self._make_observation(task)
 
     def step(self, action: Action):
-        task = TASKS[self.state.current_task]
+        task = TASKS[self.task_index]
         reward = self._grade(action, task)
 
-        self.state.total_reward = round(self.state.total_reward + reward, 4)
-        self.state.task_rewards = self.state.task_rewards + [reward]
-        self.state.current_task += 1
-
-        if self.state.current_task >= len(TASKS):
-            self.state.done = True
-            next_obs = Observation(
-                pr_title="All tasks complete",
-                pr_description="",
-                code_diff="",
-                task_difficulty="done",
-                instructions="Episode finished.",
-            )
-        else:
-            next_obs = self._make_observation(TASKS[self.state.current_task])
+        self.state.total_reward = reward
+        self.state.task_rewards = [reward]
+        self.state.done = True
+        next_obs = Observation(
+            pr_title="Task complete",
+            pr_description="",
+            code_diff="",
+            task_difficulty="done",
+            instructions="Episode finished.",
+        )
 
         return next_obs, reward, self.state.done, {
-            "completed_task": task["difficulty"],
+            "completed_task": task["task_id"],
             "reward": reward,
             "total_reward": self.state.total_reward,
         }

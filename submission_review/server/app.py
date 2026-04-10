@@ -4,6 +4,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException
+from pydantic import BaseModel
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -11,6 +12,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from environment import PRReviewEnvironment
 from models import Action, Observation, State
+from tasks import TASKS
 
 
 ENV_NAME = "pr-review-env"
@@ -22,6 +24,11 @@ ENV_DESCRIPTION = (
 
 app = FastAPI(title="PR Review Environment", version="1.0.0")
 SESSIONS: dict[str, PRReviewEnvironment] = {}
+NEXT_TASK_INDEX = 0
+
+
+class ResetRequest(BaseModel):
+    task_index: int | None = None
 
 
 @app.get("/health")
@@ -34,6 +41,15 @@ def metadata():
     return {
         "name": ENV_NAME,
         "description": ENV_DESCRIPTION,
+        "task_count": len(TASKS),
+        "tasks": [
+            {
+                "task_id": task["task_id"],
+                "difficulty": task["difficulty"],
+                "title": task["pr_title"],
+            }
+            for task in TASKS
+        ],
     }
 
 
@@ -54,14 +70,24 @@ def mcp():
         "result": {
             "name": ENV_NAME,
             "description": ENV_DESCRIPTION,
+            "task_count": len(TASKS),
         },
     }
 
 
 @app.post("/reset")
-def reset():
+def reset(request: ResetRequest | None = None):
+    global NEXT_TASK_INDEX
+
     session_id = str(uuid.uuid4())
-    env = PRReviewEnvironment()
+    requested_index = request.task_index if request else None
+    if requested_index is None:
+        task_index = NEXT_TASK_INDEX
+        NEXT_TASK_INDEX = (NEXT_TASK_INDEX + 1) % len(TASKS)
+    else:
+        task_index = requested_index % len(TASKS)
+
+    env = PRReviewEnvironment(task_index=task_index)
     obs = env.reset()
     SESSIONS[session_id] = env
 

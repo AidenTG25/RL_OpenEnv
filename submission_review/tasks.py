@@ -4,6 +4,7 @@
 
 TASKS = [
     {
+        "task_id": "age-validation",
         "difficulty": "easy",
         "pr_title": "Add user age validation",
         "pr_description": (
@@ -43,6 +44,7 @@ TASKS = [
         "allowed_false_positive": False,
     },
     {
+        "task_id": "discount-calculation",
         "difficulty": "medium",
         "pr_title": "Add discount calculation for premium users",
         "pr_description": (
@@ -111,6 +113,7 @@ TASKS = [
         "allowed_false_positive": False,
     },
     {
+        "task_id": "login-endpoint",
         "difficulty": "hard",
         "pr_title": "Add user login endpoint",
         "pr_description": (
@@ -197,6 +200,7 @@ TASKS = [
         "allowed_false_positive": False,
     },
     {
+        "task_id": "dashboard-cache",
         "difficulty": "hard",
         "pr_title": "Cache dashboard metrics to speed up page loads",
         "pr_description": (
