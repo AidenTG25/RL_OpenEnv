@@ -4,3 +4,45 @@ type: space
 runtime: fastapi
 app: server.app:app
 port: 8000
+description: >
+  Pull-request review curriculum: agents read PR title, description, and diff,
+  report bugs, severity, and fixes. Each task is graded by a programmatic rubric
+  in environment.PRReviewEnvironment (issue match, severity, fix quality).
+
+# Declared curriculum tasks with graders (Phase 2 / static validators count these).
+tasks:
+  - id: age-validation
+    name: Age validation boundary
+    difficulty: easy
+    max_steps: 1
+    reward_range: [0.01, 0.99]
+    grader:
+      type: programmatic
+      implementation: environment.PRReviewEnvironment._grade
+
+  - id: discount-calculation
+    name: Discount and bulk pricing
+    difficulty: medium
+    max_steps: 1
+    reward_range: [0.01, 0.99]
+    grader:
+      type: programmatic
+      implementation: environment.PRReviewEnvironment._grade
+
+  - id: login-endpoint
+    name: Login endpoint security review
+    difficulty: hard
+    max_steps: 1
+    reward_range: [0.01, 0.99]
+    grader:
+      type: programmatic
+      implementation: environment.PRReviewEnvironment._grade
+
+  - id: dashboard-cache
+    name: Dashboard cache tenant scoping
+    difficulty: hard
+    max_steps: 1
+    reward_range: [0.01, 0.99]
+    grader:
+      type: programmatic
+      implementation: environment.PRReviewEnvironment._grade

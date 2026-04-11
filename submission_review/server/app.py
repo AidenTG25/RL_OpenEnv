@@ -36,20 +36,35 @@ def health():
     return {"status": "healthy"}
 
 
+def _task_public(task: dict) -> dict:
+    return {
+        "task_id": task["task_id"],
+        "difficulty": task["difficulty"],
+        "title": task["pr_title"],
+        "has_grader": True,
+        "grader": {"type": "programmatic", "enabled": True},
+    }
+
+
 @app.get("/metadata")
 def metadata():
+    tasks = [_task_public(task) for task in TASKS]
     return {
         "name": ENV_NAME,
         "description": ENV_DESCRIPTION,
         "task_count": len(TASKS),
-        "tasks": [
-            {
-                "task_id": task["task_id"],
-                "difficulty": task["difficulty"],
-                "title": task["pr_title"],
-            }
-            for task in TASKS
-        ],
+        "graded_task_count": sum(1 for t in tasks if t.get("has_grader")),
+        "tasks": tasks,
+    }
+
+
+@app.get("/tasks")
+def list_tasks():
+    """Expose curriculum tasks and grader flags for platform validators."""
+    return {
+        "task_count": len(TASKS),
+        "graded_task_count": len(TASKS),
+        "tasks": [_task_public(task) for task in TASKS],
     }
 
 
@@ -71,6 +86,8 @@ def mcp():
             "name": ENV_NAME,
             "description": ENV_DESCRIPTION,
             "task_count": len(TASKS),
+            "graded_task_count": len(TASKS),
+            "tasks": [_task_public(task) for task in TASKS],
         },
     }
 
