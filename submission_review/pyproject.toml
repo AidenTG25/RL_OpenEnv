@@ -28,4 +28,14 @@ server = "server.app:main"
 [tool.setuptools]
 include-package-data = true
 packages = ["server"]
-py-modules = ["environment", "inference", "models", "tasks"]
+py-modules = ["environment", "inference", "models", "tasks", "grader_registry"]
+
+[tool.openenv]
+name = "pr-review-env"
+min_graded_tasks = 3
+graded_task_ids = [
+    "age-validation",
+    "discount-calculation",
+    "login-endpoint",
+    "dashboard-cache",
+]

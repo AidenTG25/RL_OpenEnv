@@ -9,3 +9,5 @@ GRADERS = (
     {"task_id": "login-endpoint", "enabled": True},
     {"task_id": "dashboard-cache", "enabled": True},
 )
+
+TASK_IDS_WITH_GRADERS = [g["task_id"] for g in GRADERS if g.get("enabled")]

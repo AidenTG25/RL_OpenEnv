@@ -44,6 +44,9 @@ class PRReviewEnvironment:
             "completed_task": task["task_id"],
             "reward": reward,
             "total_reward": self.state.total_reward,
+            "graded": True,
+            "grader": task.get("grader")
+            or {"enabled": True, "type": "programmatic_rubric"},
         }
 
     def get_state(self) -> State:

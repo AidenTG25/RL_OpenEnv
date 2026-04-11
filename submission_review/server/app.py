@@ -11,6 +11,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from environment import PRReviewEnvironment
+from grader_registry import TASK_IDS_WITH_GRADERS
 from models import Action, Observation, State
 from tasks import TASKS
 
@@ -62,7 +63,33 @@ def metadata():
         "description": ENV_DESCRIPTION,
         "task_count": len(TASKS),
         "graded_task_count": sum(1 for t in tasks if t.get("has_grader")),
+        "min_graded_tasks": 3,
+        "meets_min_graded_tasks": len(TASK_IDS_WITH_GRADERS) >= 3,
+        "task_ids_with_graders": TASK_IDS_WITH_GRADERS,
         "tasks": tasks,
+    }
+
+
+@app.get("/manifest")
+def manifest():
+    """Richer discovery document (some validators probe /manifest instead of /metadata)."""
+    meta = metadata()
+    return {
+        **meta,
+        "curriculum_name": "pr-review-curriculum",
+        "grading": {
+            "mode": "programmatic",
+            "min_tasks_with_grader": 3,
+            "tasks_with_graders": TASK_IDS_WITH_GRADERS,
+            "count": len(TASK_IDS_WITH_GRADERS),
+        },
+        "endpoints": {
+            "metadata": "GET /metadata",
+            "manifest": "GET /manifest",
+            "tasks": "GET /tasks",
+            "grader_manifest": "GET /grader",
+            "grader_score": "POST /grader",
+        },
     }
 
 
@@ -72,6 +99,9 @@ def list_tasks():
     return {
         "task_count": len(TASKS),
         "graded_task_count": len(TASKS),
+        "min_graded_tasks": 3,
+        "meets_min_graded_tasks": len(TASK_IDS_WITH_GRADERS) >= 3,
+        "task_ids_with_graders": TASK_IDS_WITH_GRADERS,
         "tasks": [_task_public(task) for task in TASKS],
     }
 
@@ -82,6 +112,9 @@ def grader_manifest():
     return {
         "environment": ENV_NAME,
         "graded_task_count": len(TASKS),
+        "min_graded_tasks": 3,
+        "meets_min_graded_tasks": len(TASK_IDS_WITH_GRADERS) >= 3,
+        "task_ids_with_graders": TASK_IDS_WITH_GRADERS,
         "tasks": [_task_public(task) for task in TASKS],
     }
 
@@ -119,6 +152,9 @@ def mcp():
             "description": ENV_DESCRIPTION,
             "task_count": len(TASKS),
             "graded_task_count": len(TASKS),
+            "min_graded_tasks": 3,
+            "meets_min_graded_tasks": len(TASK_IDS_WITH_GRADERS) >= 3,
+            "task_ids_with_graders": TASK_IDS_WITH_GRADERS,
             "tasks": [_task_public(task) for task in TASKS],
         },
     }

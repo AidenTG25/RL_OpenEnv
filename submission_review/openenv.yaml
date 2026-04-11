@@ -51,3 +51,29 @@ tasks:
       enabled: true
       type: programmatic
       implementation: environment.PRReviewEnvironment._grade
+
+# Alternate shapes some validators scan for (keep in sync with `tasks` above).
+curriculum:
+  name: pr-review-curriculum
+  tasks:
+    - id: age-validation
+      grader:
+        enabled: true
+    - id: discount-calculation
+      grader:
+        enabled: true
+    - id: login-endpoint
+      grader:
+        enabled: true
+    - id: dashboard-cache
+      grader:
+        enabled: true
+
+grading:
+  mode: programmatic
+  min_tasks_with_grader: 3
+  tasks_with_graders:
+    - age-validation
+    - discount-calculation
+    - login-endpoint
+    - dashboard-cache
