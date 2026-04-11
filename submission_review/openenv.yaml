@@ -4,7 +4,7 @@ name: pr-review-env
 type: space
 runtime: fastapi
 app: server.app:app
-port: 8000
+port: 7860
 description: >
   Pull-request review curriculum: agents read PR title, description, and diff,
   report bugs, severity, and fixes. Each task is graded by a programmatic rubric

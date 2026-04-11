@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir \
 
 COPY . .
 
-EXPOSE 8000
+EXPOSE 7860
 
 ENV ENABLE_WEB_INTERFACE=true
 
