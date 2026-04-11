@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "minimum_graded_tasks": 3,
+  "tasks": [
+    { "id": "age-validation", "grader": { "enabled": true } },
+    { "id": "discount-calculation", "grader": { "enabled": true } },
+    { "id": "login-endpoint", "grader": { "enabled": true } },
+    { "id": "dashboard-cache", "grader": { "enabled": true } }
+  ]
+}

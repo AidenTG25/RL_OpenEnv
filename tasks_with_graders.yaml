@@ -1,0 +1,12 @@
+# Repo-root copy for GitHub-only scanners; keep in sync with submission_review/tasks_with_graders.yaml
+schema_version: 1
+minimum_tasks_with_graders: 3
+tasks_with_graders:
+  - task_id: age-validation
+    grader_enabled: true
+  - task_id: discount-calculation
+    grader_enabled: true
+  - task_id: login-endpoint
+    grader_enabled: true
+  - task_id: dashboard-cache
+    grader_enabled: true

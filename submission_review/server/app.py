@@ -1,9 +1,11 @@
 import argparse
+import json
 import sys
 import uuid
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -14,6 +16,23 @@ from environment import PRReviewEnvironment
 from grader_registry import TASK_IDS_WITH_GRADERS
 from models import Action, Observation, State
 from tasks import TASKS
+
+
+_CURRICULUM_JSON_PATH = ROOT_DIR / "curriculum.json"
+_TASKS_WITH_GRADERS_YAML_PATH = ROOT_DIR / "tasks_with_graders.yaml"
+
+
+def _load_curriculum_json() -> dict:
+    if _CURRICULUM_JSON_PATH.is_file():
+        return json.loads(_CURRICULUM_JSON_PATH.read_text(encoding="utf-8"))
+    return {
+        "version": 1,
+        "minimum_graded_tasks": 3,
+        "tasks": [
+            {"id": t["task_id"], "grader": {"enabled": True}}
+            for t in TASKS
+        ],
+    }
 
 
 ENV_NAME = "pr-review-env"
@@ -70,6 +89,26 @@ def metadata():
     }
 
 
+@app.get("/curriculum.json")
+def curriculum_json():
+    """Expose curriculum.json over HTTP (some validators fetch this path)."""
+    return _load_curriculum_json()
+
+
+@app.get("/tasks_with_graders.yaml")
+def tasks_with_graders_yaml():
+    """Expose tasks_with_graders.yaml over HTTP (literal filename match)."""
+    if _TASKS_WITH_GRADERS_YAML_PATH.is_file():
+        return PlainTextResponse(
+            _TASKS_WITH_GRADERS_YAML_PATH.read_text(encoding="utf-8"),
+            media_type="application/yaml",
+        )
+    return PlainTextResponse(
+        "# fallback: see /manifest\nminimum_tasks_with_graders: 3\n",
+        media_type="application/yaml",
+    )
+
+
 @app.get("/manifest")
 def manifest():
     """Richer discovery document (some validators probe /manifest instead of /metadata)."""
@@ -89,6 +128,8 @@ def manifest():
             "tasks": "GET /tasks",
             "grader_manifest": "GET /grader",
             "grader_score": "POST /grader",
+            "curriculum_json": "GET /curriculum.json",
+            "tasks_with_graders_yaml": "GET /tasks_with_graders.yaml",
         },
     }
 

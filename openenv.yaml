@@ -11,6 +11,16 @@ description: >
   report bugs, severity, and fixes. Each task is graded by a programmatic rubric
   in environment.PRReviewEnvironment (issue match, severity, fix quality).
 
+graders:
+  - task_id: age-validation
+    enabled: true
+  - task_id: discount-calculation
+    enabled: true
+  - task_id: login-endpoint
+    enabled: true
+  - task_id: dashboard-cache
+    enabled: true
+
 tasks:
   - id: age-validation
     name: Age validation boundary
