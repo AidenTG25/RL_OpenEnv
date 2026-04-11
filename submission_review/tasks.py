@@ -5,6 +5,7 @@
 TASKS = [
     {
         "task_id": "age-validation",
+        "grader": {"enabled": True, "type": "programmatic_rubric"},
         "difficulty": "easy",
         "pr_title": "Add user age validation",
         "pr_description": (
@@ -45,6 +46,7 @@ TASKS = [
     },
     {
         "task_id": "discount-calculation",
+        "grader": {"enabled": True, "type": "programmatic_rubric"},
         "difficulty": "medium",
         "pr_title": "Add discount calculation for premium users",
         "pr_description": (
@@ -114,6 +116,7 @@ TASKS = [
     },
     {
         "task_id": "login-endpoint",
+        "grader": {"enabled": True, "type": "programmatic_rubric"},
         "difficulty": "hard",
         "pr_title": "Add user login endpoint",
         "pr_description": (
@@ -201,6 +204,7 @@ TASKS = [
     },
     {
         "task_id": "dashboard-cache",
+        "grader": {"enabled": True, "type": "programmatic_rubric"},
         "difficulty": "hard",
         "pr_title": "Cache dashboard metrics to speed up page loads",
         "pr_description": (

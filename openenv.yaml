@@ -1,4 +1,5 @@
-# Keep in sync with ../openenv.yaml (repository root).
+# Keep in sync with submission_review/openenv.yaml
+# Hackathon Phase 2 often scans the Git repo root only — there was no openenv.yaml here before.
 spec_version: 1
 name: pr-review-env
 type: space
@@ -10,7 +11,6 @@ description: >
   report bugs, severity, and fixes. Each task is graded by a programmatic rubric
   in environment.PRReviewEnvironment (issue match, severity, fix quality).
 
-# Declared curriculum tasks with graders (Phase 2 / static validators count these).
 tasks:
   - id: age-validation
     name: Age validation boundary

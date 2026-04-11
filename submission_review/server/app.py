@@ -31,18 +31,26 @@ class ResetRequest(BaseModel):
     task_index: int | None = None
 
 
+class GradeRequest(BaseModel):
+    """Score an action against a task without creating a session (grader API)."""
+
+    task_index: int = 0
+    action: Action
+
+
 @app.get("/health")
 def health():
     return {"status": "healthy"}
 
 
 def _task_public(task: dict) -> dict:
+    g = task.get("grader") or {"enabled": True, "type": "programmatic_rubric"}
     return {
         "task_id": task["task_id"],
         "difficulty": task["difficulty"],
         "title": task["pr_title"],
-        "has_grader": True,
-        "grader": {"type": "programmatic", "enabled": True},
+        "has_grader": bool(g.get("enabled", True)),
+        "grader": g,
     }
 
 
@@ -65,6 +73,30 @@ def list_tasks():
         "task_count": len(TASKS),
         "graded_task_count": len(TASKS),
         "tasks": [_task_public(task) for task in TASKS],
+    }
+
+
+@app.get("/grader")
+def grader_manifest():
+    """Public grader manifest (some hackathon validators look for this route)."""
+    return {
+        "environment": ENV_NAME,
+        "graded_task_count": len(TASKS),
+        "tasks": [_task_public(task) for task in TASKS],
+    }
+
+
+@app.post("/grader")
+def grader_score(req: GradeRequest):
+    """Run programmatic grading for a task + action without a reset/session."""
+    task = TASKS[req.task_index % len(TASKS)]
+    env = PRReviewEnvironment(task_index=req.task_index)
+    reward = env._grade(req.action, task)
+    return {
+        "task_id": task["task_id"],
+        "task_index": req.task_index % len(TASKS),
+        "reward": reward,
+        "grader": {"enabled": True, "type": "programmatic_rubric"},
     }
 
 
