@@ -3,7 +3,7 @@ import os
 
 import requests
 from openai import OpenAI
-
+from tasks import TASKS
 
 API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
@@ -82,19 +82,23 @@ def call_llm(obs: dict) -> dict:
 
 
 def run_inference():
-    rewards = []
-    step_num = 0
-    success = False
-    score = 0.0
-
-    print(f"[START] task={TASK_NAME} env={BENCHMARK} model={MODEL_NAME}")
+    all_scores = []
 
     for task_index in range(TOTAL_TASKS):
+        task_name = TASKS[task_index]["task_id"]
+        rewards = []
+        step_num = 0
+        success = False
+        score = 0.0
+
+        print(f"[START] task={task_name} env={BENCHMARK} model={MODEL_NAME}")
+
         reset_resp = requests.post(f"{ENV_URL}/reset", json={"task_index": task_index})
         reset_resp.raise_for_status()
         obs = reset_resp.json()
         session_id = obs.pop("session_id")
         headers = {"X-Session-Id": session_id}
+
         error = None
         try:
             action = call_llm(obs)
@@ -113,9 +117,9 @@ def run_inference():
 
         reward = result.get("reward", 0.0)
         done = result.get("done", False)
-        obs = result.get("observation", {})
         rewards.append(reward)
         step_num += 1
+
         action_str = json.dumps(action, separators=(",", ":"), ensure_ascii=True)
         print(
             f"[STEP] step={step_num} "
@@ -125,22 +129,19 @@ def run_inference():
             f"error={error if error else 'null'}"
         )
 
-        if not done:
-            error = "task episode did not terminate after one review step"
-
-    if rewards:
-        score = sum(rewards) / len(rewards)
+        score = rewards[0] if rewards else 0.0
         success = score > 0.0
+        rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+        print(
+            f"[END] success={str(success).lower()} "
+            f"steps={step_num} "
+            f"score={score:.2f} "        # ← 2 decimal places
+            f"rewards={rewards_str}"
+        )
 
-    rewards_str = ",".join(f"{reward:.2f}" for reward in rewards)
-    print(
-        f"[END] success={str(success).lower()} "
-        f"steps={step_num} "
-        f"score={score:.3f} "
-        f"rewards={rewards_str}"
-    )
+        all_scores.append(score)
 
-    return score
+    return sum(all_scores) / len(all_scores) if all_scores else 0.0
 
 
 if __name__ == "__main__":
